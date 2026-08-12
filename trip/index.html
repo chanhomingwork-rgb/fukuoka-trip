@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>福岡 8/13–18 行程地圖</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-inner">
+        <div class="header-brand">
+          <h1>福岡 6 天 5 夜</h1>
+          <div class="meta">2026/8/13 – 8/18 · 住宿博多站 · CX588 / CX529</div>
+        </div>
+        <div class="flight-strip">
+          <div class="flight-chip">
+            <span class="flight-label">去程 8/13</span>
+            HKG 11:00 → FUK 15:30
+          </div>
+          <div class="flight-chip">
+            <span class="flight-label">回程 8/18</span>
+            FUK 17:40 → HKG 20:25
+          </div>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn-ghost" id="btn-transport">交通速查</button>
+          <button type="button" class="btn-ghost" id="show-all-days">全部標記</button>
+          <button type="button" class="btn-ghost" id="btn-print">列印</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-main-tabs" role="tablist">
+          <button type="button" class="sidebar-main-tab active" data-tab="itinerary" role="tab" aria-selected="true">行程</button>
+          <button type="button" class="sidebar-main-tab" data-tab="bookings" role="tab" aria-selected="false">
+            預約清單
+            <span class="tab-badge" id="booking-tab-badge">0/0</span>
+          </button>
+        </div>
+
+        <div class="sidebar-panel active" id="panel-itinerary" role="tabpanel">
+          <div class="search-box">
+            <input type="search" id="search" placeholder="搜尋景點、餐廳、地址…" autocomplete="off" />
+          </div>
+          <div class="day-tabs" id="day-tabs"></div>
+          <div class="sidebar-scroll">
+            <div class="day-hero" id="day-hero"></div>
+            <div class="timeline" id="timeline"></div>
+            <div id="swaps-block"></div>
+          </div>
+        </div>
+
+        <div class="sidebar-panel" id="panel-bookings" role="tabpanel" hidden>
+          <div class="booking-panel-full">
+            <div class="panel-head">
+              <div>
+                <h3>預約清單</h3>
+                <p class="panel-desc">出發前確認 · 勾選後自動儲存</p>
+              </div>
+              <span class="progress-badge" id="booking-progress">0/0</span>
+            </div>
+            <div class="booking-legend">
+              <span><i class="dot must"></i>必須</span>
+              <span><i class="dot should"></i>建議</span>
+              <span><i class="dot done"></i>已完成</span>
+              <span><i class="dot skip"></i>取消</span>
+            </div>
+            <div id="booking-list"></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="map-area">
+        <div id="map"></div>
+        <div class="map-legend" id="map-legend"></div>
+
+        <button type="button" class="map-fab" id="sidebar-toggle" aria-label="開啟行程">
+          <span class="map-fab-icon">☰</span>
+          <span>行程</span>
+        </button>
+      </main>
+    </div>
+
+    <div class="overlay-backdrop" id="sidebar-backdrop" hidden></div>
+    <div class="overlay-backdrop" id="detail-backdrop" hidden></div>
+
+    <aside class="detail-panel" id="detail-panel">
+      <div class="detail-header">
+        <img id="detail-img" class="detail-img" alt="" hidden />
+        <div id="detail-img-fallback" class="detail-img placeholder" hidden></div>
+        <button type="button" class="close-btn" id="close-detail" aria-label="關閉">×</button>
+      </div>
+      <div class="detail-content">
+        <div class="detail-top">
+          <span class="type-badge" id="detail-type"></span>
+          <h2 id="detail-name"></h2>
+        </div>
+        <div class="detail-meta" id="detail-meta"></div>
+        <div class="detail-actions">
+          <button type="button" class="btn-sm" id="btn-copy-addr">複製地址</button>
+          <a id="detail-maplink" class="btn-sm primary" href="#" target="_blank" rel="noopener">Google Maps</a>
+          <button type="button" class="btn-sm" id="btn-visit-toggle">標記已去</button>
+        </div>
+
+        <div class="detail-section" id="detail-booking-wrap">
+          <h3>預約</h3>
+          <div id="detail-booking"></div>
+        </div>
+        <div class="detail-section" id="detail-sources-wrap" hidden>
+          <h3>平台評價</h3>
+          <div id="detail-sources"></div>
+        </div>
+        <div class="detail-section">
+          <h3>必看</h3>
+          <ul id="detail-mustsee"></ul>
+        </div>
+        <div class="detail-section">
+          <h3>交通</h3>
+          <p id="detail-transport"></p>
+        </div>
+        <div class="detail-section">
+          <h3>推薦餐廳</h3>
+          <div id="detail-restaurants"></div>
+        </div>
+      </div>
+    </aside>
+
+    <dialog id="transport-dialog" class="modal">
+      <div class="modal-head">
+        <h2>博多站出發 · 交通速查</h2>
+        <button type="button" class="close-btn modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body" id="transport-table"></div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="js/data.js"></script>
+    <script src="js/pois.js"></script>
+    <script src="js/meta.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
